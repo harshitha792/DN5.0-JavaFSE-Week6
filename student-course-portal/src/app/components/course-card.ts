@@ -1,30 +1,43 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  Output,
-  SimpleChanges
-} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { CreditLabelPipe } from '../pipes/credit-label';
 
 @Component({
   selector: 'app-course-card',
-  imports: [],
+  imports: [CommonModule, CreditLabelPipe],
   templateUrl: './course-card.html',
   styleUrl: './course-card.css'
 })
-export class CourseCard implements OnChanges {
+export class CourseCard {
   @Input() course!: {
     id: number;
     name: string;
     code: string;
-    credits: number;
+    credits: number | null;
+    gradeStatus: 'passed' | 'failed' | 'pending';
   };
 
   @Output() enrollRequested = new EventEmitter<number>();
 
-  ngOnChanges(changes: SimpleChanges): void {
-    console.log('Previous:', changes['course']?.previousValue);
-    console.log('Current:', changes['course']?.currentValue);
+  isEnrolled = false;
+  isExpanded = false;
+
+  get cardClasses() {
+    return {
+      'card--enrolled': this.isEnrolled,
+      'card--full': (this.course.credits ?? 0) >= 4,
+      expanded: this.isExpanded
+    };
+  }
+
+  get borderColour(): string {
+    if (this.course.gradeStatus === 'passed') return 'green';
+    if (this.course.gradeStatus === 'failed') return 'red';
+    return 'grey';
+  }
+
+  enroll(): void {
+    this.isEnrolled = true;
+    this.enrollRequested.emit(this.course.id);
   }
 }
